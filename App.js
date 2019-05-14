@@ -1,21 +1,66 @@
-import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ * @flow
+ */
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' + 'Shake or press menu button for dev menu',
-});
+import React, {Component} from 'react';
+import {
+  Image,
+  Button,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-export default class App extends Component {
+import { Video } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
+
+//import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
+
+
+type Props = {};
+export default class App extends Component<Props> {
+  state = {
+    video: null,
+  };
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to Pineal Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
+		{this.state.video?
+			<Video rate={1.0}
+				volume={1.0}
+				isMuted={false}
+				resizeMode="cover"
+				shouldPlay
+				isLooping
+				source={{ uri: this.state.video }}
+				style={{ width: '100%', height: 300 }}
+			/>:null
+		}
+        <Text style={styles.welcome}>Ggif maker</Text>
+        <Button
+          title="Pick a video file"
+          onPress={this.pickVideo}
+        />
       </View>
     );
   }
+
+  pickVideo = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+	 	mediaTypes:'Videos'
+    });
+
+    if (!result.cancelled)
+      this.setState({ video: result.uri });
+  };
 }
 
 const styles = StyleSheet.create({
@@ -29,10 +74,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  }
 });
