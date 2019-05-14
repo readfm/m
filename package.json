@@ -6,9 +6,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "react-native-unimodules": "0.3.1",
+    "expo-av": "^4.1.0",
+    "expo-image-picker": "^4.0.0",
     "react": "16.6.3",
-    "react-native": "0.58.6"
+    "react-native": "0.58.6",
+    "react-native-unimodules": "0.3.1"
   },
   "devDependencies": {
     "babel-jest": "24.1.0",
