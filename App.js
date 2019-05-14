@@ -21,7 +21,11 @@ import {
 import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 
-//import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
+import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
+
+import {
+  FileSystem
+} from 'react-native-unimodules';
 
 
 type Props = {};
@@ -33,22 +37,28 @@ export default class App extends Component<Props> {
   render() {
     return (
       <View style={styles.container}>
-		{this.state.video?
-			<Video rate={1.0}
-				volume={1.0}
-				isMuted={false}
-				resizeMode="cover"
-				shouldPlay
-				isLooping
-				source={{ uri: this.state.video }}
-				style={{ width: '100%', height: 300 }}
-			/>:null
-		}
+    		{this.state.video?
+    			<Video rate={1.0}
+    				volume={1.0}
+    				isMuted={false}
+    				resizeMode="cover"
+    				shouldPlay
+    				isLooping
+    				source={{ uri: this.state.video }}
+    				style={{ width: '100%', height: 300 }}
+    			/>:null
+    		}
         <Text style={styles.welcome}>Ggif maker</Text>
         <Button
           title="Pick a video file"
           onPress={this.pickVideo}
         />
+        {this.state.image?
+          <Image
+            style={{width: 300, height: 200}}
+            source={{uri: this.state.image}}
+          />:null
+        }
       </View>
     );
   }
@@ -58,9 +68,47 @@ export default class App extends Component<Props> {
 	 	mediaTypes:'Videos'
     });
 
-    if (!result.cancelled)
-      this.setState({ video: result.uri });
-  };
+    console.log(result);
+
+    if(result.cancelled) return;
+
+    this.setState({ video: result.uri });
+    console.log('URI: '+ result.uri);
+    this.convert(result.uri);
+  }
+
+  convert(uri){
+    var path = FileSystem.documentDirectory + '' + this.makeid(5)+'.gif';
+    this.setState({path});
+    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 "+path)
+    .then(result => {
+      console.log(path);
+
+      console.log("FFmpeg process exited with rc " + result.rc);
+      
+      this.setState({ image: path});
+      
+      /*
+      if(result.rc){
+        RNFFmpeg.execute('convert -loop 0 '+dir+'ffout*.png '+dir+'output.gif', ' ')
+        .then(result => {
+          console.log(result);
+          this.setState({ image: dir+'output.gif'});
+        });
+      }
+      */
+    });
+  }
+
+  makeid(length) {
+     var result           = '';
+     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+     var charactersLength = characters.length;
+     for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+     }
+     return result;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -68,7 +116,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
   welcome: {
     fontSize: 20,
