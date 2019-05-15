@@ -1,6 +1,6 @@
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'
 include ':react-native-sound'
-project(':react-nat ive-sound').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sound/android')
+project(':react-native-sound').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sound/android')
 include ':react-native-ffmpeg'
 project(':react-native-ffmpeg -native-ffmpeg').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-ffmpeg/android')
 includeUnimodulesProjects()
