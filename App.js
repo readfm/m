@@ -53,11 +53,14 @@ export default class App extends Component{
           onPress={this.pickVideo}
         />
         {this.state.image?
-          <Image
-            style={{width: 300, height: 200}}
-            source={{uri: this.state.image}}
+          <Ggif
+            style={{width: "100%"}}
+            source={this.state.image}
           />:null
         }
+        <Image
+          style={{width: 300, height: 200}}
+          source={{uri: 'https://media3.giphy.com/media/wWue0rCDOphOE/giphy.gif'}} />
       </View>
     );
   }
