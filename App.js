@@ -26,7 +26,7 @@ import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 import * as FileSystem from 'expo-file-system';
 import Canvas from 'react-native-canvas';
 
-import Ggif from './src/components/Ggif.js';
+//import Ggif from './src/components/Ggif.js';
 
 
 type Props = {};
