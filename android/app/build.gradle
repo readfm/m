@@ -72,6 +72,7 @@ import com.android.build.OutputFile
  * ]
  */
 
+
 project.ext.react = [
     entryFile: "index.js"
 ]
@@ -139,6 +140,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-sound')
     implementation project(':react-native-ffmpeg')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"

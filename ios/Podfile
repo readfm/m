@@ -29,6 +29,8 @@ target 'gg' do
 
   use_unimodules!
 
+  pod 'RNSound', :path => '../node_modules/react-native-sound'
+
   target 'ggTests' do
     inherit! :search_paths
   end
