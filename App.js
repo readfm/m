@@ -24,13 +24,11 @@ import * as ImagePicker from 'expo-image-picker';
 import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 
 import * as FileSystem from 'expo-file-system';
-import Canvas from 'react-native-canvas';
+//import Canvas from 'react-native-canvas';
 
 //import Ggif from './src/components/Ggif.js';
 
-
-type Props = {};
-export default class App extends Component<Props> {
+export default class App extends Component{
   state = {
     video: null,
   };
@@ -50,7 +48,6 @@ export default class App extends Component<Props> {
     			/>:null
     		}
         <Text style={styles.welcome}>Ggif maker</Text>
-        <Canvas ref={this.handleCanvas}/>
         <Button
           title="Pick a video file"
           onPress={this.pickVideo}
@@ -63,12 +60,6 @@ export default class App extends Component<Props> {
         }
       </View>
     );
-  }
-
-  handleCanvas = (canvas) => {
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'purple';
-    ctx.fillRect(0, 0, 100, 100);
   }
 
   pickVideo = async () => {
