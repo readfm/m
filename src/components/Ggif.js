@@ -37,6 +37,9 @@ export default class Ggif extends Component{
 	    this.ctx.fill();
 
 
+		this.frame(0);
+		return;
+
 		if(!this.state.downloaded)
 			this.download();
 	}
@@ -53,7 +56,7 @@ export default class Ggif extends Component{
 			
 			//t.resize();
 
-			this.frame(0);
+			//this.frame(0);
 
 			//t.extract();
 
@@ -123,9 +126,8 @@ export default class Ggif extends Component{
 	}
 
 	frame(i){
-		console.log(this.g.numFrames());
-		this.ctx.getImageData(0,0, this.g.width, this.g.height).then(pixels => {
-			/*
+		//console.log(this.g.numFrames());
+		this.ctx.getImageData(0,0, 40, 50/*this.ctx.width, this.g.height*/).then(pixels => {
 			const data = pixels.data;
 			const length = Object.keys(data).length;
 			for(let i = 0; i < length; i += 4) {
@@ -136,7 +138,7 @@ export default class Ggif extends Component{
 
 			console.log(this.ctx);
 
-			const tmp = new ImageData(this.ctx.canvas, data, 100, 100); // Or Uint8ClampedArray.from(data) here
+			const tmp = new ImageData(data, 100, 100); // Or Uint8ClampedArray.from(data) here
 			this.ctx.putImageData(tmp, 0, 0);
 
 			/*
@@ -147,7 +149,7 @@ export default class Ggif extends Component{
 			*/
 			//this.ctx.putImageData(pixels, 0, 0);
 
-			const tmp = new ImageData(this.ctx.canvas);
+			//const tmp = new ImageData(this.ctx.canvas);
 			//this.ctx.putImageData.apply(this.ctx, [tmp, 0, 0]);     
 
 		});
