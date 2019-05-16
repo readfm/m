@@ -2,10 +2,15 @@ import React, {Component} from 'react';
 import Canvas from 'react-native-canvas';
 
 import {GifReader} from '../libs/omggif.js';
+import {atob, btoa} from '../libs/base64.js';
+
+import * as FileSystem from 'expo-file-system';
 
 export default class Ggif extends Component{
 	state = {
 		video: null,
+		speed: 0,
+		fade: 0
 	};
 
 	constructor(){
@@ -17,45 +22,80 @@ export default class Ggif extends Component{
 
 	}
 
-	render() {
+	render(){
 		return <Canvas ref={this.handleCanvas}/>;
 	}
 
 
 	handleCanvas = (canvas) => {
 		this.ctx = canvas.getContext('2d');
-		this.ctx.fillStyle = 'purple';
-		this.ctx.fillRect(0, 0, 100, 100);
+		this.ctx.fillStyle = 'orange';
+		this.ctx.fillRect(0, 0, 300, 80);
+
+	    this.ctx.fillStyle = 'red';
+	    this.ctx.arc(5, 5, 49, 0, Math.PI * 2, true);
+	    this.ctx.fill();
+
+
+		if(!this.state.downloaded)
+			this.download();
 	}
 
-  	download(id, cb){
-  		FileSystem.readAsStringAsync(this.props.src, {
-  			encoding: FileSystem.EncodingTypes.Base64
+  	download(){
+  		FileSystem.readAsStringAsync(this.props.source, {
+  			encoding: FileSystem.EncodingType.Base64
   		}).then(r => {
-  			
+  			console.log('Downloaded: '+ this.props.source);
+  			let buf = this.convertDataURIToBinary(r);
+			var g = this.g = new GifReader(buf);
+			console.log(g);
+			if(!this.g) return;
+			
+			//t.resize();
+
+			this.frame(0);
+
+			//t.extract();
+
+  			this.setState({downloaded: true});
   		});
+
+  		return;
 
 		Pix.download(id, function(file){
 			var buf = file.data;
 			if(!buf) return reject();
 
-			var g = t.g = new GifReader(buf);
+			var g = this.g = new GifReader(buf);
 				
-			if(!t.g) return;
-			t.resize();
+			if(!this.g) return;
 
-			t.frame(0);
+			this.frame(0);
 
-			t.extract();
+			this.extract();
 		});
-	},
+	}
+
+
+	convertDataURIToBinary(dataURI){
+		var BASE64_MARKER = ';base64,';
+		var base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+		var base64 = dataURI//.substring(base64Index);
+		var raw = atob(base64);
+		var rawLength = raw.length;
+		var array = new Uint8Array(new ArrayBuffer(rawLength));
+
+		for(i = 0; i < rawLength; i++) {
+			array[i] = raw.charCodeAt(i);
+		}
+		return array;
+	}
 
 	resize(){
 		this.canvas.width = this.g.width;
 		this.canvas.height = this.g.height;
-	},
+	}
 
-	speed: 1,
 	play(from){
 		var t = this;
 		var time = 0;
@@ -80,18 +120,61 @@ export default class Ggif extends Component{
 			t.audio.currentTime = from/10;
 			t.audio.play();
 		}
-	},
+	}
 
 	frame(i){
-		var pixels = this.ctx.getImageData(0,0, this.g.width, this.g.height);
-	    this.g.decodeAndBlitFrameBGRA(i, pixels.data);
-	    this.ctx.putImageData(pixels, 0, 0);
-	},
+		console.log(this.g.numFrames());
+		this.ctx.getImageData(0,0, this.g.width, this.g.height).then(pixels => {
+			/*
+			const data = pixels.data;
+			const length = Object.keys(data).length;
+			for(let i = 0; i < length; i += 4) {
+			  data[i] += 100;
+			  data[i + 1] += 100;
+			  data[i + 2] += 100;
+			}
+
+			console.log(this.ctx);
+
+			const tmp = new ImageData(this.ctx.canvas, data, 100, 100); // Or Uint8ClampedArray.from(data) here
+			this.ctx.putImageData(tmp, 0, 0);
+
+			/*
+			console.log(pixels);
+			var ar = pixels.data;
+			pixels.data = Uint8ClampedArray(ar);
+			this.g.decodeAndBlitFrameBGRA(i, pixels.data);
+			*/
+			//this.ctx.putImageData(pixels, 0, 0);
+
+			const tmp = new ImageData(this.ctx.canvas);
+			//this.ctx.putImageData.apply(this.ctx, [tmp, 0, 0]);     
+
+		});
+	}
+
+	save(){
+		canvas.toDataURL('image/jpeg', 1.0)
+        .then((data) => {
+            data = data.substring(1);
+            data = data.slice(0, -1);
+
+            if (data.indexOf('data:image/jpeg;base64,') > -1) {
+                // Removing "data:image/jpeg;base64," for saving into file as base64 data
+                data = data.substring(23);
+            }
+
+            RNFetchBlob.fs.writeFile("/storage/emulated/0/Download/atar.png", data, 'base64')
+                .then((data) => {
+                    // Image data saved and has 200x4 pixels width and 300x2 pixels height
+                })
+        })
+    }
 
 	pause(){
 		this.audio.pause();
 		this.clearTimeouts();
-	},
+	}
 
 	clearTimeouts(){
 		this.timeouts.forEach(function(to){
@@ -129,9 +212,8 @@ export default class Ggif extends Component{
 		}
 		else
 			this.audioFormat = 'ogg';
-	},
+	}
 
-	fade: 0,
 	extractAudio(){
 		var t = this;
 		var sound = t.g.buf.subarray(t.g.p);
@@ -161,5 +243,5 @@ export default class Ggif extends Component{
 		}
 
 		return sound;
-	},
+	}
 };

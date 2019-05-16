@@ -26,7 +26,7 @@ import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 import * as FileSystem from 'expo-file-system';
 //import Canvas from 'react-native-canvas';
 
-//import Ggif from './src/components/Ggif.js';
+import Ggif from './src/components/Ggif.js';
 
 export default class App extends Component{
   state = {
@@ -58,25 +58,31 @@ export default class App extends Component{
             source={this.state.image}
           />:null
         }
-        <Image
+        <Ggif
           style={{width: 300, height: 200}}
-          source={{uri: 'https://media3.giphy.com/media/wWue0rCDOphOE/giphy.gif'}} />
+          source={FileSystem.documentDirectory + 'dURrr.gif'}
+          />
       </View>
     );
   }
 
   pickVideo = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-	 	mediaTypes:'Videos'
+      //mediaTypes:'Videos'
     });
 
     console.log(result);
-
     if(result.cancelled) return;
-
-    this.setState({ video: result.uri });
     console.log('URI: '+ result.uri);
-    this.convert(result.uri);
+
+    if(type == 'video'){
+      this.setState({video: result.uri});
+      this.convert(result.uri);
+    }
+
+    if(type == 'image'){
+      this.setState({image: result.uri});
+    }
   }
 
   convert(uri){

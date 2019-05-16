@@ -31,6 +31,8 @@ target 'gg' do
 
   pod 'RNSound', :path => '../node_modules/react-native-sound'
 
+  pod 'react-native-webview', :path => '../node_modules/react-native-webview'
+
   target 'ggTests' do
     inherit! :search_paths
   end
