@@ -12,6 +12,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		DBFE48D0EF094E7BB51A4B1E /* libReactNativeFFmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B3DC3B739F444EE0AB882F96 /* libReactNativeFFmpeg.a */; };
+		C2B723E3F94147739978B44C /* libRCTGCanvas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 68016EEA8BC946FE97F5DAA9 /* libRCTGCanvas.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +42,8 @@
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		F907159A78EA4DB09807B5AF /* ReactNativeFFmpeg.xcodeproj */ = {isa = PBXFileReference; name = "ReactNativeFFmpeg.xcodeproj"; path = "../node_modules/react-native-ffmpeg/ios/ReactNativeFFmpeg.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
 		B3DC3B739F444EE0AB882F96 /* libReactNativeFFmpeg.a */ = {isa = PBXFileReference; name = "libReactNativeFFmpeg.a"; path = "libReactNativeFFmpeg.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
+		6004611B099740EC8939B57B /* RCTGCanvas.xcodeproj */ = {isa = PBXFileReference; name = "RCTGCanvas.xcodeproj"; path = "../node_modules/react-native-gcanvas/ios/RCTGCanvas.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
+		68016EEA8BC946FE97F5DAA9 /* libRCTGCanvas.a */ = {isa = PBXFileReference; name = "libRCTGCanvas.a"; path = "libRCTGCanvas.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +59,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBFE48D0EF094E7BB51A4B1E /* libReactNativeFFmpeg.a in Frameworks */,
+				C2B723E3F94147739978B44C /* libRCTGCanvas.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				F907159A78EA4DB09807B5AF /* ReactNativeFFmpeg.xcodeproj */,
+				6004611B099740EC8939B57B /* RCTGCanvas.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -326,10 +331,12 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)\..\node_modules\react-native-ffmpeg\ios",
+					"$(SRCROOT)\..\node_modules\react-native-gcanvas\ios/**",
 				);
 			};
 			name = Debug;
@@ -353,10 +360,12 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)\..\node_modules\react-native-ffmpeg\ios",
+					"$(SRCROOT)\..\node_modules\react-native-gcanvas\ios/**",
 				);
 			};
 			name = Release;
@@ -380,6 +389,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)\..\node_modules\react-native-ffmpeg\ios",
+					"$(SRCROOT)\..\node_modules\react-native-gcanvas\ios/**",
 				);
 			};
 			name = Debug;
@@ -402,6 +412,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)\..\node_modules\react-native-ffmpeg\ios",
+					"$(SRCROOT)\..\node_modules\react-native-gcanvas\ios/**",
 				);
 			};
 			name = Release;

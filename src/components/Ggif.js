@@ -28,6 +28,7 @@ export default class Ggif extends Component{
 
 
 	handleCanvas = (canvas) => {
+		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.ctx.fillStyle = 'orange';
 		this.ctx.fillRect(0, 0, 300, 80);
@@ -35,10 +36,6 @@ export default class Ggif extends Component{
 	    this.ctx.fillStyle = 'red';
 	    this.ctx.arc(5, 5, 49, 0, Math.PI * 2, true);
 	    this.ctx.fill();
-
-
-		this.frame(0);
-		return;
 
 		if(!this.state.downloaded)
 			this.download();
@@ -48,15 +45,16 @@ export default class Ggif extends Component{
   		FileSystem.readAsStringAsync(this.props.source, {
   			encoding: FileSystem.EncodingType.Base64
   		}).then(r => {
+  			    //this.frame(0);
   			console.log('Downloaded: '+ this.props.source);
   			let buf = this.convertDataURIToBinary(r);
 			var g = this.g = new GifReader(buf);
-			console.log(g);
+			//console.log(g);
 			if(!this.g) return;
 			
 			//t.resize();
 
-			//this.frame(0);
+			this.frame(0);
 
 			//t.extract();
 
@@ -127,7 +125,11 @@ export default class Ggif extends Component{
 
 	frame(i){
 		//console.log(this.g.numFrames());
-		this.ctx.getImageData(0,0, 40, 50/*this.ctx.width, this.g.height*/).then(pixels => {
+
+		console.log('frame'+i);
+		
+		this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).then(pixels => {
+			/*
 			const data = pixels.data;
 			const length = Object.keys(data).length;
 			for(let i = 0; i < length; i += 4) {
@@ -135,11 +137,18 @@ export default class Ggif extends Component{
 			  data[i + 1] += 100;
 			  data[i + 2] += 100;
 			}
+			*/
 
-			console.log(this.ctx);
 
-			const tmp = new ImageData(data, 100, 100); // Or Uint8ClampedArray.from(data) here
-			this.ctx.putImageData(tmp, 0, 0);
+			console.log('getImageData yaa');
+			var arr = [234,436,46,43,43,46,46,56,47,65,7,45,84,8,68,86,65,457,648,58,6,68,58,68,45,86,45,8,35,74,6,83];
+			pixels.data = Uint8ClampedArray.from(arr)
+
+			// const tmp = new ImageData(pixels.data, 8, 1); // Or Uint8ClampedArray.from(data) here
+			this.ctx.putImageData(this.canvas, arr, 4, i*4).then(r => {
+				console.log(r);
+			});
+			console.log('putImageData yaa');
 
 			/*
 			console.log(pixels);
@@ -151,7 +160,6 @@ export default class Ggif extends Component{
 
 			//const tmp = new ImageData(this.ctx.canvas);
 			//this.ctx.putImageData.apply(this.ctx, [tmp, 0, 0]);     
-
 		});
 	}
 
