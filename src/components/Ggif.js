@@ -1,58 +1,104 @@
 import React, {Component} from 'react';
-import Canvas from 'react-native-canvas';
+//import Canvas from 'react-native-canvas';
 
 import {GifReader} from '../libs/omggif.js';
 import {atob, btoa} from '../libs/base64.js';
 
+import Svg,{
+    Circle,
+    Ellipse,
+    G,
+    Text,
+    TSpan,
+    TextPath,
+    Path,
+    Polygon,
+    Polyline,
+    Line,
+    Rect,
+    Use,
+    Image,
+    Symbol,
+    Defs,
+    LinearGradient,
+    RadialGradient,
+    Stop,
+    ClipPath,
+    Pattern,
+    Mask,
+} from 'react-native-svg';
+
 import * as FileSystem from 'expo-file-system';
 
 export default class Ggif extends Component{
-	state = {
-		video: null,
-		speed: 0,
-		fade: 0
-	};
+	constructor(props){
+		super(props);
 
-	constructor(){
-		super();
+		this.state = {
+			video: null,
+			speed: 0,
+			fade: 0
+		};
 
 		this.timeouts = [];
 		this.frames = [];
 		this.fade = 0;
 
+		if(this.props.src)
+			this.load(this.props.src);
 	}
 
 	render(){
-		return <Canvas ref={this.handleCanvas}/>;
+
+		//return <Svg height={this.state.g?this.state.g.width:'260'} width={this.state.g?this.state.g.height:'100%'}>
+		return <Svg height='260' width='100%'>
+			<Rect
+			    x="0"
+			    y="0"
+			    width="100%"
+			    height="100%"
+			    fill="orange"
+			/>
+
+			<Image
+			    x="0"
+			    y="0"
+			    width="100%"
+			    height="100%"
+			    opacity="1"
+			    href={this.props.src}
+			/>
+
+			{/*
+			<Text
+			    x="2"
+			    y="10"
+			    textAnchor="left"
+			    fontSize="16"
+			    fill="blue"
+			>Ggif test</Text>
+			*/}
+		</Svg>;
 	}
 
-
-	handleCanvas = (canvas) => {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d');
-		this.ctx.fillStyle = 'orange';
-		this.ctx.fillRect(0, 0, 300, 80);
-
-	    this.ctx.fillStyle = 'red';
-	    this.ctx.arc(5, 5, 49, 0, Math.PI * 2, true);
-	    this.ctx.fill();
-
-		if(!this.state.downloaded)
-			this.download();
-	}
-
-  	download(){
-  		FileSystem.readAsStringAsync(this.props.source, {
+  	load(src){
+  		FileSystem.readAsStringAsync(src, {
   			encoding: FileSystem.EncodingType.Base64
   		}).then(r => {
-  			    //this.frame(0);
-  			console.log('Downloaded: '+ this.props.source);
+  			//this.frame(0);
+  			console.log('Downloaded: '+ this.props.src);
   			let buf = this.convertDataURIToBinary(r);
-			var g = this.g = new GifReader(buf);
-			//console.log(g);
+  			this.g = new GifReader(buf);
+
+  			console.log(g);
+  			this.setState({
+  				
+  			});
+
+  			return;
 			if(!this.g) return;
 			
-			//t.resize();
+			t.resize();
 
 			this.frame(0);
 
@@ -60,21 +106,6 @@ export default class Ggif extends Component{
 
   			this.setState({downloaded: true});
   		});
-
-  		return;
-
-		Pix.download(id, function(file){
-			var buf = file.data;
-			if(!buf) return reject();
-
-			var g = this.g = new GifReader(buf);
-				
-			if(!this.g) return;
-
-			this.frame(0);
-
-			this.extract();
-		});
 	}
 
 
@@ -93,7 +124,7 @@ export default class Ggif extends Component{
 	}
 
 	resize(){
-		this.canvas.width = this.g.width;
+		this.props.width = this.g.width;
 		this.canvas.height = this.g.height;
 	}
 

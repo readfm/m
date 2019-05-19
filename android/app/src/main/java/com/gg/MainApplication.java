@@ -3,7 +3,7 @@ package com.gg;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.taobao.gcanvas.plugin.rn.GReactPackage;
+import com.horcrux.svg.SvgPackage;
 import com.zmxv.RNSound.RNSoundPackage;
 import com.arthenica.reactnative.RNFFmpegPackage;
 import com.facebook.react.ReactNativeHost;
@@ -40,7 +40,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new GReactPackage(),
+            new SvgPackage(),
             new RNSoundPackage(),
             new RNFFmpegPackage(),
           new ModuleRegistryAdapter(mModuleRegistryProvider)

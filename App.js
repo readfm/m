@@ -26,74 +26,85 @@ import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 import * as FileSystem from 'expo-file-system';
 //import Canvas from 'react-native-canvas';
 
-//import Ggif from './src/components/Ggif.js';
+import Ggif from './src/components/Ggif.js';
 
 export default class App extends Component{
-  state = {
-    video: null,
-  };
+  constructor(){
+    super();
+    this.state = {
+      video: null,
+      path: FileSystem.documentDirectory + 'latest.gif'
+    };
+
+    var re = FileSystem.getInfoAsync(this.state.path).then(r => {
+      console.log(r);
+      if(r.exists)
+        this.setState({image: r.uri});
+    });
+  }
 
   render() {
+    console.log(this.state);
     return (
       <View style={styles.container}>
-    		{this.state.video?
-    			<Video rate={1.0}
-    				volume={1.0}
-    				isMuted={false}
-    				resizeMode="cover"
-    				shouldPlay
-    				isLooping
-    				source={{ uri: this.state.video }}
-    				style={{ width: '100%', height: 300 }}
-    			/>:null
-    		}
-        <Text style={styles.welcome}>Ggif maker</Text>
-        <Button
-          title="Pick a video file"
-          onPress={this.pickVideo}
-        />
-        {this.state.image?
+    		{this.state.image?
           <Ggif
             style={{width: "100%"}}
-            source={this.state.image}
-          />:null
-        }
-        <Ggif
-          style={{width: 300, height: 200}}
-          source={FileSystem.documentDirectory + 'dURrr.gif'}
-          />
+            src={this.state.image}
+          />:this.state.video?
+      			<Video rate={1.0}
+      				volume={1.0}
+      				isMuted={false}
+      				resizeMode="cover"
+      				shouldPlay
+      				isLooping
+      				source={{ uri: this.state.video }}
+      				style={{ width: '100%', height: 300 }}
+      			/>:
+            <Text style={styles.welcome}>Ggif maker</Text>
+    		}
+        <Button
+          style={{width: "100%"}}
+          title={this.state.process || "Pick a video file"}
+          onPress={this.pickVideo}
+        />
       </View>
     );
   }
 
   pickVideo = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      //mediaTypes:'Videos'
+      mediaTypes:'Videos'
     });
 
-    console.log(result);
     if(result.cancelled) return;
-    console.log('URI: '+ result.uri);
+    console.log(result.type+' URI: '+ result.uri);
 
-    if(type == 'video'){
+    if(result.type == 'video'){
       this.setState({video: result.uri});
       this.convert(result.uri);
     }
 
-    if(type == 'image'){
+    if(result.type == 'image'){
       this.setState({image: result.uri});
     }
   }
 
   convert(uri){
-    var path = FileSystem.documentDirectory + '' + this.makeid(5)+'.gif';
-    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 "+path)
+    this.setState({
+      process: 'Converting video to gif'
+    });
+    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 -y "+this.state.path)
     .then(result => {
-      console.log(path);
-
       console.log("FFmpeg process exited with rc " + result.rc);
+
+      if(result.rc == 0){
+        this.setState({
+          image: this.state.path,
+          process: null
+        });
+      }
       
-      this.setState({ image: path});
       
       /*
       if(result.rc){
@@ -121,7 +132,7 @@ export default class App extends Component{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: '#F5FCFF'
   },
@@ -129,5 +140,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+    width: '100%'
   }
 });
