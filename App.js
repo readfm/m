@@ -41,6 +41,21 @@ export default class App extends Component{
       if(r.exists)
         this.setState({image: r.uri});
     });
+
+
+    let dir = 'file:///data/user/0/com.gg/cache/frames_cd83b24b2778f38787ace522159c6a87';
+    FileSystem.readDirectoryAsync(dir).then(r => {
+      console.log(r);
+
+      var re = [];
+      (r || []).forEach(fname => {
+        FileSystem.getInfoAsync(FileSystem.cacheDirectory+'frames_cd83b24b2778f38787ace522159c6a87/' + fname).then(r => {
+          re.push(r);
+        });
+      });
+
+      console.log(re);
+    });
   }
 
   render() {
@@ -73,10 +88,24 @@ export default class App extends Component{
   }
 
   pickVideo = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:'Videos'
+    /*
+    let dir = 'file:///data/user/0/com.gg/cache/frames_test/';
+    let cmd = '-i file:///data/user/0/com.gg/files/latest.gif -y '+dir+'%d.png';
+    console.log(cmd);
+    FileSystem.makeDirectoryAsync(dir).then(r => {
+      RNFFmpeg.execute(cmd).then(r => {
+        console.log(r);
+      }).catch(er => {
+        console.log(er);
+      });
     });
+    return;
+    */
 
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes:'All'
+    });
+    
     if(result.cancelled) return;
     console.log(result.type+' URI: '+ result.uri);
 

@@ -3,6 +3,16 @@ import React, {Component} from 'react';
 
 import {GifReader} from '../libs/omggif.js';
 import {atob, btoa} from '../libs/base64.js';
+import {
+  Image as Img,
+  Button,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Txt,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import Svg,{
     Circle,
@@ -28,6 +38,8 @@ import Svg,{
     Mask,
 } from 'react-native-svg';
 
+import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
+
 import * as FileSystem from 'expo-file-system';
 
 export default class Ggif extends Component{
@@ -37,37 +49,76 @@ export default class Ggif extends Component{
 		this.state = {
 			video: null,
 			speed: 0,
-			fade: 0
+			fade: 0,
+			frames: [],
+			activeFrame: 0
 		};
 
 		this.timeouts = [];
 		this.frames = [];
 		this.fade = 0;
 
+		console.log('construct');
 		if(this.props.src)
-			this.load(this.props.src);
+			FileSystem.getInfoAsync(this.props.src, {md5: true}).then(file => {
+				this.setState({file});
+				console.log(file);
+				console.log('FileSystem.getInfoAsync');
+
+				this.extractFrames().then(() => {
+					this.load(file);
+				});
+			});
 	}
 
 	render(){
-
 		//return <Svg height={this.state.g?this.state.g.width:'260'} width={this.state.g?this.state.g.height:'100%'}>
-		return <Svg height='260' width='100%'>
+
+		/*
+		return <View>{frame?<Img
+          style={{width: 300, height: 200}}
+          source={{uri: frame.path}}
+        />:null}</View>;
+		*/
+
+		var prevFrame = this.state.frames[this.state.activeFrame];
+		var frame = this.state.frames[this.state.activeFrame+1];
+		
+		console.log('Num');
+
+		return <Svg width='100%' height="320" onPress={(ev) => this.play()}>
 			<Rect
 			    x="0"
 			    y="0"
 			    width="100%"
-			    height="100%"
+
 			    fill="orange"
 			/>
 
-			<Image
-			    x="0"
-			    y="0"
-			    width="100%"
-			    height="100%"
-			    opacity="1"
-			    href={this.props.src}
-			/>
+			{/*prevFrame?<Image
+				x="0"
+				y="0"
+				key={prevFrame.path}
+				href={prevFrame.path}
+			/>:null}
+
+			{frame?<Image
+				x="0"
+				y="0"
+				key={frame.path}
+				href={frame.path}
+			/>:null*/}
+
+			{this.state.frames.map((frame, i) => {
+				return <Image
+					x="0"
+					y="0"
+					key={i}
+					opacity={i?0:1}
+					ref={c => this.frames[i] = c}
+					href={frame.path}
+				/>
+			})}
 
 			{/*
 			<Text
@@ -81,18 +132,30 @@ export default class Ggif extends Component{
 		</Svg>;
 	}
 
-  	load(src){
-  		FileSystem.readAsStringAsync(src, {
+  	load(file){
+  		console.log(file);
+  		FileSystem.readAsStringAsync(file.uri, {
   			encoding: FileSystem.EncodingType.Base64
   		}).then(r => {
-  			//this.frame(0);
   			console.log('Downloaded: '+ this.props.src);
-  			let buf = this.convertDataURIToBinary(r);
-  			this.g = new GifReader(buf);
 
-  			console.log(g);
+  			let buf = this.convertDataURIToBinary(r);
+
+  			console.log('Conloaded: ');
+  			let g = new GifReader(buf);
+
+  			var frames = [];
+
+  			for (i = 0; i < g.numFrames(); i++){
+  				frames[i] = g.frameInfo(i);
+  				frames[i].path = FileSystem.cacheDirectory + 'frames_'+file.md5 + '/' + i + '.png';
+  			}
+
+  			console.log('Frames ready');
+
   			this.setState({
-  				
+  				frames,
+  				dir: FileSystem.cacheDirectory + 'frames_'+file.md5
   			});
 
   			return;
@@ -108,6 +171,27 @@ export default class Ggif extends Component{
   		});
 	}
 
+	extractFrames(){
+		var dir = FileSystem.cacheDirectory+'frames_'+this.state.file.md5;
+			path = dir + '/%d.png';
+
+		console.log(path);
+		return new Promise((ok, no) => {
+			console.log('About to read'+dir);
+			FileSystem.getInfoAsync(dir).then(r => {
+				if(r.exists){
+					ok();
+				}
+				else FileSystem.makeDirectoryAsync(dir).then(r => {
+					RNFFmpeg.execute('-i '+this.props.src+' -y '+path).then(r => {
+						(!r.rc)?ok():no();
+					}).catch(er => {
+						no();
+					});
+				});
+			});
+		});
+	}
 
 	convertDataURIToBinary(dataURI){
 		var BASE64_MARKER = ';base64,';
@@ -134,18 +218,20 @@ export default class Ggif extends Component{
 		if(!from) from = 0;
 
 		t.clearTimeouts();
-		for(var i = 0; i < this.g.numFrames(); i++){
-			(function(i){
-				var frame = t.g.frameInfo(i);
-				var to = setTimeout(function(){
-					t.frame(i);
-	    			//	if(t.g.numFrames() == i+1) t.play(0);
-				}, time);
-				t.timeouts.push(to);
-				var delay = frame.delay * 10 / t.speed;
-				time += (time >= from)?delay:1;
-			})(i);
-		};
+		this.state.frames.forEach((frame, i) => {
+			var to = setTimeout(() => {
+				console.log(i);
+				//(i?this.frames[i-1]:this.frames[this.state.frames.length-1]).setNativeProps({opacity: 0});i
+
+				if(!i)
+					this.frames.map(frame => frame.setNativeProps({opacity: 0}));
+
+				this.frames[i].setNativeProps({opacity: 1});
+			}, time);
+			t.timeouts.push(to);
+			var delay = frame.delay * 10 / t.speed;
+			time += (time >= from)?delay:1;
+		});
 
 		if(t.audio){
 			t.audio.playbackRate = t.speed;
