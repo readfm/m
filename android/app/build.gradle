@@ -143,15 +143,17 @@ dependencies {
     implementation project(':react-native-svg')
     implementation project(':react-native-sound')
     implementation project(':react-native-ffmpeg')
-    
-    //compile 'com.facebook.fresco:fresco:1.+'
 
-    // For animated GIF support
-    //compile 'com.facebook.fresco:animated-gif:1.+'
+    
+    implementation 'com.facebook.fresco:fresco:1.13.0'
+    implementation 'com.facebook.fresco:animated-gif:1.13.0'
+    
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+
     addUnimodulesDependencies()
 }
 

@@ -1,6 +1,10 @@
 import React, {Component} from 'react';
 //import Canvas from 'react-native-canvas';
 
+
+import { Video } from 'expo-av';
+
+
 import {GifReader} from '../libs/omggif.js';
 import {atob, btoa} from '../libs/base64.js';
 import {
@@ -42,6 +46,9 @@ import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 
 import * as FileSystem from 'expo-file-system';
 
+import Sound from 'react-native-sound';
+
+
 export default class Ggif extends Component{
 	constructor(props){
 		super(props);
@@ -50,6 +57,7 @@ export default class Ggif extends Component{
 			video: null,
 			speed: 0,
 			fade: 0,
+			taps: 0,
 			frames: [],
 			activeFrame: 0
 		};
@@ -59,16 +67,7 @@ export default class Ggif extends Component{
 		this.fade = 0;
 
 		console.log('construct');
-		if(this.props.src)
-			FileSystem.getInfoAsync(this.props.src, {md5: true}).then(file => {
-				this.setState({file});
-				console.log(file);
-				console.log('FileSystem.getInfoAsync');
-
-				this.extractFrames().then(() => {
-					this.load(file);
-				});
-			});
+		this.preload();
 	}
 
 	render(){
@@ -80,41 +79,16 @@ export default class Ggif extends Component{
           source={{uri: frame.path}}
         />:null}</View>;
 		*/
-
-		var prevFrame = this.state.frames[this.state.activeFrame];
-		var frame = this.state.frames[this.state.activeFrame+1];
 		
-		console.log('Num');
 
-		return <Svg width='100%' height="320" onPress={(ev) => this.play()}>
-			<Rect
-			    x="0"
-			    y="0"
-			    width="100%"
-
-			    fill="orange"
-			/>
-
-			{/*prevFrame?<Image
-				x="0"
-				y="0"
-				key={prevFrame.path}
-				href={prevFrame.path}
-			/>:null}
-
-			{frame?<Image
-				x="0"
-				y="0"
-				key={frame.path}
-				href={frame.path}
-			/>:null*/}
-
+		return (this.state.frames.length?
+		<Svg width='320' height="175" onPress={(ev) => this.play()}>
 			{this.state.frames.map((frame, i) => {
 				return <Image
 					x="0"
 					y="0"
+					width='320' height="175"
 					key={i}
-					opacity={i?0:1}
 					ref={c => this.frames[i] = c}
 					href={frame.path}
 				/>
@@ -129,10 +103,43 @@ export default class Ggif extends Component{
 			    fill="blue"
 			>Ggif test</Text>
 			*/}
-		</Svg>;
+		</Svg>:<TouchableOpacity activeOpacity = { .5 } onPress={(ev) => this.tap(ev)}>
+			<Img
+				style={{width: 320, height: 175}}
+				ref={c => this.img = c}
+				key={'tap_0'+this.state.taps}
+        		source={{uri: this.props.src}}
+        	/>
+        </TouchableOpacity>
+        );
 	}
 
-  	load(file){
+	tap(el){
+		this.setState({taps: this.state.taps + 1});
+		if(this.sound) this.sound.play();
+	}
+
+	preload(){
+		this.sound = new Sound(this.props.src);
+		return;
+		console.log(this.props.src);
+		FileSystem.getInfoAsync(this.props.src, {md5: true}).then(file => {
+			console.log(file);
+			this.setState({file});
+		
+			this.extractFrames().then(() => {
+				//this.load();
+			});
+		});
+	}
+
+  	load(){
+  		console.log('load');
+  		if(this.state.loading) return;
+
+  		this.setState({loading: true});
+  		
+  		var file = this.state.file;
   		console.log(file);
   		FileSystem.readAsStringAsync(file.uri, {
   			encoding: FileSystem.EncodingType.Base64
@@ -177,14 +184,14 @@ export default class Ggif extends Component{
 
 		console.log(path);
 		return new Promise((ok, no) => {
-			console.log('About to read'+dir);
+			console.log('About to read '+dir);
 			FileSystem.getInfoAsync(dir).then(r => {
 				if(r.exists){
-					ok();
+					FileSystem.readDirectoryAsync(dir).then(ok);
 				}
 				else FileSystem.makeDirectoryAsync(dir).then(r => {
 					RNFFmpeg.execute('-i '+this.props.src+' -y '+path).then(r => {
-						(!r.rc)?ok():no();
+						(!r.rc)?FileSystem.readDirectoryAsync(dir).then(ok):no();
 					}).catch(er => {
 						no();
 					});
@@ -218,14 +225,14 @@ export default class Ggif extends Component{
 		if(!from) from = 0;
 
 		t.clearTimeouts();
+
+		this.frames.map(frame => frame.setNativeProps({opacity: 0}));
+
 		this.state.frames.forEach((frame, i) => {
 			var to = setTimeout(() => {
 				console.log(i);
 				//(i?this.frames[i-1]:this.frames[this.state.frames.length-1]).setNativeProps({opacity: 0});i
-
-				if(!i)
-					this.frames.map(frame => frame.setNativeProps({opacity: 0}));
-
+				
 				this.frames[i].setNativeProps({opacity: 1});
 			}, time);
 			t.timeouts.push(to);
@@ -353,19 +360,18 @@ export default class Ggif extends Component{
 	    	t.audio.src = URL.createObjectURL(blob);
 
 	    	t.audio.addEventListener('ended', function(){
-					(t.onEnd || function(){})();
+				(t.onEnd || function(){})();
 			    this.currentTime = 0;
 			    if(this.volume <= 0.07) return false;
 
-					console.log(this.volume);
-					if(t.fade === true)
-						this.volume = this.volume/2;
-					else
-						this.volume -= t.fade;
+				if(t.fade === true)
+					this.volume = this.volume/2;
+				else
+					this.volume -= t.fade;
 
-					console.log(this.volume);
+				console.log(this.volume);
 
-					t.play(0);
+				t.play(0);
 			}, false);
 		}
 

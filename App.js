@@ -33,58 +33,67 @@ export default class App extends Component{
     super();
     this.state = {
       video: null,
+      images: [],
       path: FileSystem.documentDirectory + 'latest.gif'
     };
 
-    var re = FileSystem.getInfoAsync(this.state.path).then(r => {
-      console.log(r);
-      if(r.exists)
-        this.setState({image: r.uri});
-    });
-
-
-    let dir = 'file:///data/user/0/com.gg/cache/frames_cd83b24b2778f38787ace522159c6a87';
-    FileSystem.readDirectoryAsync(dir).then(r => {
-      console.log(r);
-
-      var re = [];
-      (r || []).forEach(fname => {
-        FileSystem.getInfoAsync(FileSystem.cacheDirectory+'frames_cd83b24b2778f38787ace522159c6a87/' + fname).then(r => {
-          re.push(r);
-        });
-      });
-
-      console.log(re);
-    });
+    this.list();
   }
-
   render() {
     console.log(this.state);
     return (
       <View style={styles.container}>
-    		{this.state.image?
-          <Ggif
-            style={{width: "100%"}}
-            src={this.state.image}
-          />:this.state.video?
-      			<Video rate={1.0}
-      				volume={1.0}
-      				isMuted={false}
-      				resizeMode="cover"
-      				shouldPlay
-      				isLooping
-      				source={{ uri: this.state.video }}
-      				style={{ width: '100%', height: 300 }}
-      			/>:
-            <Text style={styles.welcome}>Ggif maker</Text>
-    		}
         <Button
-          style={{width: "100%"}}
-          title={this.state.process || "Pick a video file"}
+          style={{width: "100%", borderRadius: 24, fontSize: 32}}
+          title={this.state.process || "+"}
           onPress={this.pickVideo}
         />
+        {this.state.images?this.state.images.map((image_src, i) => {
+          return <Ggif
+            key={image_src}
+            src={image_src}
+          />
+        }):this.state.image?
+            <Ggif
+              style={{width: "100%"}}
+              src={this.state.image}
+            />:this.state.video?
+        			<Video rate={1.0}
+        				volume={1.0}
+        				isMuted={false}
+        				resizeMode="cover"
+        				shouldPlay
+        				isLooping
+        				source={{ uri: this.state.video }}
+        				style={{ width: '100%', height: 300 }}
+        			/>:
+              <Text style={styles.welcome}>Ggif maker</Text>
+    		}
       </View>
     );
+  }
+
+  list(){
+    var dir = FileSystem.documentDirectory;
+    FileSystem.readDirectoryAsync(dir).then(r => {
+      console.log(r);
+
+      var images = [];
+      (r || []).forEach(fname => {
+        //FileSystem.getInfoAsync().then(r => {});
+
+        let path = dir + fname;
+        
+        if(fname.indexOf('.gif')+1)
+          //FileSystem.getInfoAsync().then(r => {
+            images.push(path);
+          //});
+      });
+
+      this.setState({images});
+
+      console.log(images);
+    });
   }
 
   pickVideo = async () => {
@@ -103,7 +112,7 @@ export default class App extends Component{
     */
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:'All'
+      mediaTypes: 'All'
     });
     
     if(result.cancelled) return;
@@ -115,7 +124,12 @@ export default class App extends Component{
     }
 
     if(result.type == 'image'){
-      this.setState({image: result.uri});
+        var images = this.state.images;
+        images.unshift(result.uri);
+        this.setState({
+          images,
+          process: null
+        });
     }
   }
 
@@ -123,15 +137,21 @@ export default class App extends Component{
     this.setState({
       process: 'Converting video to gif'
     });
-    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 -y "+this.state.path)
+
+    var path = FileSystem.documentDirectory + this.makeid(4) + '.gif';
+    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 -y -r 8 "+path)
     .then(result => {
       console.log("FFmpeg process exited with rc " + result.rc);
 
       if(result.rc == 0){
+        var images = this.state.images;
+        images.unshift(path);
         this.setState({
-          image: this.state.path,
+          images,
           process: null
         });
+
+        //FileSystem.documentDirectory + 'latest.gif'
       }
       
       
@@ -170,5 +190,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: 10,
     width: '100%'
+  },
+
+  image: {
+    width: "100%",
+    margin: '4 0'
   }
 });
