@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 //import Canvas from 'react-native-canvas';
 
 
-import { Video } from 'expo-av';
+import { Video, Audio } from 'expo-av';
 
 
 import {GifReader} from '../libs/omggif.js';
@@ -81,52 +81,45 @@ export default class Ggif extends Component{
 		*/
 		
 
-		return (this.state.frames.length?
-		<Svg width='320' height="175" onPress={(ev) => this.play()}>
-			{this.state.frames.map((frame, i) => {
-				return <Image
-					x="0"
-					y="0"
-					width='320' height="175"
-					key={i}
-					ref={c => this.frames[i] = c}
-					href={frame.path}
-				/>
-			})}
-
-			{/*
-			<Text
-			    x="2"
-			    y="10"
-			    textAnchor="left"
-			    fontSize="16"
-			    fill="blue"
-			>Ggif test</Text>
-			*/}
-		</Svg>:<TouchableOpacity activeOpacity = { .5 } onPress={(ev) => this.tap(ev)}>
+		return <TouchableOpacity activeOpacity = { .5 } onPress={(ev) => this.tap(ev)}>
 			<Img
-				style={{width: 320, height: 175}}
+				style={{width: 320, height: 250}}
 				ref={c => this.img = c}
 				key={'tap_0'+this.state.taps}
         		source={{uri: this.props.src}}
         	/>
-        </TouchableOpacity>
-        );
+        </TouchableOpacity>;
 	}
 
-	tap(el){
-		this.setState({taps: this.state.taps + 1});
-		if(this.sound) this.sound.play();
+	tap = async () => {
+		console.log('tap');
+		if(this.state.sound){
+			try {
+				await this.state.sound.setVolumeAsync(1);
+				await this.state.sound.setPositionAsync(0);
+				this.state.sound.replayAsync().then(r => {
+					console.log('baaam', r);
+					this.setState({taps: this.state.taps + 1});
+				});
+			}
+			catch (error){
+				console.error(error);
+			}
+		}
 	}
 
 	preload(){
-		this.sound = new Sound(this.props.src);
-		return;
+		//this.sound = new Sound(this.props.src);
+		//this.load();
+		//return;
 		console.log(this.props.src);
 		FileSystem.getInfoAsync(this.props.src, {md5: true}).then(file => {
 			console.log(file);
 			this.setState({file});
-		
+			this.load();
+
+
+			return;
 			this.extractFrames().then(() => {
 				//this.load();
 			});
@@ -149,10 +142,15 @@ export default class Ggif extends Component{
   			let buf = this.convertDataURIToBinary(r);
 
   			console.log('Conloaded: ');
-  			let g = new GifReader(buf);
+  			let g = this.g = new GifReader(buf);
+
+  			console.log(g);
 
   			var frames = [];
 
+  			this.extractAudio();
+
+  			/*
   			for (i = 0; i < g.numFrames(); i++){
   				frames[i] = g.frameInfo(i);
   				frames[i].path = FileSystem.cacheDirectory + 'frames_'+file.md5 + '/' + i + '.png';
@@ -164,6 +162,7 @@ export default class Ggif extends Component{
   				frames,
   				dir: FileSystem.cacheDirectory + 'frames_'+file.md5
   			});
+  			*/
 
   			return;
 			if(!this.g) return;
@@ -348,31 +347,41 @@ export default class Ggif extends Component{
 			this.audioFormat = 'ogg';
 	}
 
-	extractAudio(){
+	extractAudio = async () => {
 		var t = this;
-		var sound = t.g.buf.subarray(t.g.p);
-		if(sound.length){
-			var mime = 'audio/'+(t.audioFormat || 'ogg') + ";base64"
+		var soundBuf = t.g.buf.subarray(t.g.p);
+		if(soundBuf.length){
+			var mime = 'audio/ogg' + ";base64";
 
-			var blob = new Blob([sound], {type: mime});
+			console.log(mime);
+			let sound64base = btoa(String.fromCharCode(...soundBuf));
+			
+			var sound = new Audio.Sound({
+				initialStatus: {
+					isLooping: true
+				}
+			});
 
-			t.audio = new Audio;
-	    	t.audio.src = URL.createObjectURL(blob);
+			this.setState({sound});
 
-	    	t.audio.addEventListener('ended', function(){
-				(t.onEnd || function(){})();
-			    this.currentTime = 0;
-			    if(this.volume <= 0.07) return false;
+			try {
+				await sound.loadAsync({
+					uri: "data:audio/mpeg;base64,"+sound64base
+				});
+				await sound.setIsLoopingAsync(true);
 
-				if(t.fade === true)
-					this.volume = this.volume/2;
-				else
-					this.volume -= t.fade;
+		    	await sound.setOnPlaybackStatusUpdate(ev => {
+				    if(ev.volume <= 0.07) return sound.stopAsync();
 
-				console.log(this.volume);
+				    if(ev.didJustFinish){
+				    	console.log('Just finished: ', ev);
+						sound.setVolumeAsync(ev.volume / 2);
+				    }
+				}, false);
 
-				t.play(0);
-			}, false);
+			} catch (error){
+				console.error(error);
+			}
 		}
 
 		return sound;

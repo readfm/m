@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 
 import { Video } from 'expo-av';
-import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 
 import {LogLevel, RNFFmpeg} from 'react-native-ffmpeg';
 
@@ -56,7 +56,7 @@ export default class App extends Component{
         }):this.state.image?
             <Ggif
               style={{width: "100%"}}
-              src={this.state.image}
+              src={this.state.image} 
             />:this.state.video?
         			<Video rate={1.0}
         				volume={1.0}
@@ -111,35 +111,70 @@ export default class App extends Component{
     return;
     */
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'All'
-    });
-    
-    if(result.cancelled) return;
-    console.log(result.type+' URI: '+ result.uri);
+    console.log('Pick');
 
-    if(result.type == 'video'){
+    let result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true
+    });
+
+    /*
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'All',
+      base64: false,
+      exif: false
+    });
+    */
+    console.log('Picked');
+    
+    if(result.type == 'cancel') return;
+    console.log(result);
+
+    var ext = result.name.split('.').pop().toLowerCase();
+
+    if(['avi','mp4'].indexOf(ext) + 1){
       this.setState({video: result.uri});
       this.convert(result.uri);
     }
 
-    if(result.type == 'image'){
+    if(['gif','ggif'].indexOf(ext) + 1){
+      var images = this.state.images;
+      images.unshift(result.uri);
+      this.setState({
+        images,
+        process: null
+      });
+    }
+  }
+
+  split(url){
+    this.setState({
+      process: 'reloading gif'
+    });
+
+    var path = FileSystem.documentDirectory + this.makeid(4) + '.gif';
+    RNFFmpeg.execute('-i '+uri+" -y "+path)
+    .then(result => {
+      console.log("FFmpeg process exited with rc " + result.rc);
+
+      if(result.rc == 0){
         var images = this.state.images;
-        images.unshift(result.uri);
+        images.unshift(path);
         this.setState({
           images,
           process: null
         });
-    }
+      }
+    });
   }
+
 
   convert(uri){
     this.setState({
-      process: 'Converting video to gif'
+      process: 'Converting Video to gif'
     });
 
     var path = FileSystem.documentDirectory + this.makeid(4) + '.gif';
-    RNFFmpeg.execute('-i '+uri+" -vf scale=320:180 -y -r 8 "+path)
+    RNFFmpeg.execute('-f mp4 -i '+uri+" -vf scale=320 -y -r 8 "+path)
     .then(result => {
       console.log("FFmpeg process exited with rc " + result.rc);
 
