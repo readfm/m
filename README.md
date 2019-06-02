@@ -1,3 +1,5 @@
+Ggif.compile_here = true;  
+
 # m
 mobile ggif  
 1 play ggif audio  
